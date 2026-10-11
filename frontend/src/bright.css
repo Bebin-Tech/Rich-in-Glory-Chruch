@@ -1,0 +1,402 @@
+:root {
+  --forest: #244b3b;
+  --gold: #8c6832;
+}
+body {
+  background: #fbfaf6;
+}
+header {
+  background: #fff;
+  height: 92px;
+}
+.brand-mark {
+  background: var(--forest);
+  color: #f3dfac;
+  border: 0;
+}
+.button {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: #fff;
+  border-radius: 7px;
+}
+.button:hover {
+  background: #34634e;
+}
+.button.outline {
+  color: var(--forest);
+  border-color: #244b3b38;
+  background: #ffffff80;
+}
+.welcome-ribbon {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 5%;
+  background: #edf1e7;
+  color: #52624e;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+}
+.welcome-ribbon span:last-child {
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+.hero {
+  height: auto;
+  min-height: 620px;
+  max-height: none;
+  width: 90%;
+  max-width: 1260px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 44px;
+  background: none;
+  overflow: visible;
+  padding: 65px 0 80px;
+}
+.hero:before,
+.hero-glow {
+  display: none;
+}
+.hero-content {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+.hero h1 {
+  font-size: clamp(48px, 5.3vw, 76px);
+  letter-spacing: -2px;
+  margin: 24px 0;
+}
+.hero h1 em {
+  color: var(--forest);
+}
+.hero p {
+  color: #627168;
+  font-size: 14px;
+}
+.hero-note {
+  color: #68756d;
+}
+.hero-visual {
+  position: relative;
+  padding: 28px 0 200px 20px;
+  min-width: 0;
+}
+.hero-visual:before {
+  content: "";
+  position: absolute;
+  inset: 0 -18px 20px 25px;
+  background: #edf0e4;
+  border-radius: 48% 48% 12% 12%;
+  transform: rotate(3deg);
+  z-index: -1;
+}
+figure {
+  margin: 0;
+}
+.hero-photo {
+  padding: 12px;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 15px 50px #244b3b16;
+  transform: rotate(2deg);
+}
+.hero-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2.05;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.hero-photo figcaption {
+  padding: 18px 8px 12px;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 22px;
+}
+.hero-photo figcaption span {
+  display: block;
+  font-family: "DM Sans", sans-serif;
+  font-size: 8px;
+  letter-spacing: 2px;
+  margin-top: 6px;
+  color: #7b8479;
+}
+.hero-inset {
+  position: absolute;
+  width: 43%;
+  left: -6px;
+  bottom: 8px;
+  padding: 8px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 12px 35px #244b3b20;
+  transform: rotate(-4deg);
+}
+.hero-inset img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.78;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.hero-inset figcaption {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 17px;
+  text-align: center;
+  padding: 9px 0 3px;
+}
+.photo-flourish {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 54px;
+  color: #a68c56;
+}
+.photo-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-size: 9px;
+  color: #697660;
+  text-decoration: underline;
+}
+.scroll-hint {
+  bottom: 28px;
+  left: 0;
+  color: #627168;
+}
+.service-strip {
+  width: 90%;
+  background: white;
+  border: 1px solid #244b3b18;
+  border-radius: 12px;
+  padding: 28px 34px;
+  box-shadow: 0 8px 30px #244b3b05;
+}
+.section {
+  width: 90%;
+  padding: 76px 0;
+}
+.welcome {
+  gap: 75px;
+}
+.welcome-art {
+  height: auto;
+  border: 0;
+  border-radius: 100px 12px 12px 12px;
+  background: #e8edde;
+  padding: 14px 14px 45px;
+  overflow: hidden;
+}
+.welcome-art:before {
+  display: none;
+}
+.welcome-art img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 1.333;
+  object-fit: cover;
+  border-radius: 90px 8px 8px 8px;
+}
+.art-caption {
+  bottom: 17px;
+  color: #52624e;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+.pathways {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  padding-top: 0;
+}
+.pathway {
+  position: relative;
+  padding: 32px;
+  background: #fff;
+  border: 1px solid #244b3b18;
+  border-radius: 12px;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.pathway:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px #244b3b0a;
+}
+.pathway-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #edf1e7;
+  color: var(--forest);
+  margin-bottom: 20px;
+}
+.pathway h3 {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 29px;
+}
+.pathway p {
+  font-size: 12px;
+  margin: 12px 0 20px;
+}
+.pathway > svg {
+  color: var(--gold);
+}
+.verse-feature {
+  background: #f0f2e8;
+  border: 0;
+}
+.prayer-banner {
+  padding: 45px;
+  background: #eaf0e6;
+  border: 1px solid #244b3b16;
+  border-radius: 14px;
+  margin-top: 65px;
+}
+.card {
+  border-radius: 12px;
+  box-shadow: 0 4px 18px #244b3b04;
+}
+.card-art,
+.card-art.events {
+  background: linear-gradient(130deg, #eef1e5, #e1e8da);
+  color: var(--forest);
+}
+.card > img {
+  object-fit: contain;
+  background: #eef0e7;
+}
+.empty {
+  border-radius: 10px;
+}
+.modal,
+.form-panel,
+.notice,
+.search {
+  border-radius: 10px;
+}
+.source-credit {
+  font-size: 11px;
+  margin-top: 16px;
+}
+.source-credit a {
+  text-decoration: underline;
+}
+footer {
+  background: #f0f2e9;
+}
+@media (max-width: 1000px) {
+  .hero {
+    gap: 28px;
+    grid-template-columns: 1fr 1fr;
+    min-height: 560px;
+  }
+  .hero h1 {
+    font-size: 58px;
+  }
+  .hero-inset {
+    width: 65%;
+  }
+  .welcome {
+    gap: 35px;
+  }
+  .pathway {
+    padding: 24px;
+  }
+}
+@media (max-width: 700px) {
+  header {
+    height: 78px;
+  }
+  .welcome-ribbon {
+    justify-content: center;
+    text-align: center;
+    font-size: 9px;
+  }
+  .welcome-ribbon span:last-child {
+    display: none;
+  }
+  .hero {
+    display: flex;
+    flex-direction: column;
+    padding: 42px 0 60px;
+    min-height: 0;
+    gap: 32px;
+  }
+  .hero-content {
+    padding: 0;
+  }
+  .hero h1 {
+    font-size: 53px;
+  }
+  .hero-visual {
+    width: 100%;
+    padding: 15px 5px 160px 12px;
+  }
+  .hero-inset {
+    width: 54%;
+    left: 0;
+    bottom: 14px;
+  }
+  .hero-photo figcaption {
+    font-size: 20px;
+  }
+  .photo-flourish {
+    top: -12px;
+  }
+  .scroll-hint {
+    bottom: 15px;
+  }
+  .service-strip {
+    padding: 24px;
+    gap: 20px;
+  }
+  .section {
+    padding: 50px 0;
+  }
+  .welcome {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .welcome-art {
+    max-width: 520px;
+  }
+  .pathways {
+    grid-template-columns: 1fr;
+    padding-top: 0;
+    gap: 14px;
+  }
+  .pathway {
+    padding: 24px;
+  }
+  .pathway-icon {
+    float: left;
+    margin-right: 16px;
+  }
+  .pathway h3 {
+    font-size: 27px;
+  }
+  .pathway p {
+    clear: both;
+    padding-top: 10px;
+  }
+  .prayer-banner {
+    padding: 28px;
+    margin-top: 40px;
+  }
+  .verse-feature h2 {
+    font-size: 32px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo,
+  .hero-inset {
+    transform: none;
+  }
+}

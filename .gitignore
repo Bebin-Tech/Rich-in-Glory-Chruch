@@ -1,0 +1,14 @@
+.venv/
+node_modules/
+frontend/dist/
+backend/instance/
+instance/
+backend/uploads/
+.env
+__pycache__/
+.pytest_cache/
+*.pyc
+backups/
+.local-mysql/
+.local-runtime.json
+.pytest-tmp*/
