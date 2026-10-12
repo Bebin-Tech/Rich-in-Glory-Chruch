@@ -719,7 +719,7 @@ function Prose({ value }) {
     </div>
   );
 }
-function Modal({ children, close, label }) {
+function Modal({ children, close, label, className = "" }) {
   const closeRef = React.useRef(close);
   closeRef.current = close;
   useEffect(() => {
@@ -746,7 +746,7 @@ function Modal({ children, close, label }) {
       onClick={(e) => e.target === e.currentTarget && close()}
     >
       <div
-        className="modal"
+        className={"modal " + className}
         role="dialog"
         aria-modal="true"
         aria-label={label}
@@ -2382,23 +2382,44 @@ function ContentEditor({ item, close, saved }) {
   const { t } = useContext(Ctx);
   const [p, P] = useState(structuredClone(item)),
     [error, E] = useState(""),
-    [busy, B] = useState(false);
+    [busy, B] = useState(false),
+    [language, Language] = useState("en");
   const albums = useData(
     item.module === "photos" ? "/admin/content/albums" : null,
   );
   const update = (k, v) => P({ ...p, [k]: v });
   const data = (k, v) => P({ ...p, data: { ...p.data, [k]: v } });
   return (
-    <Modal close={close} label="Content editor">
-      <span className="eyebrow gold">
-        {names[item.module]?.[0]} · {item.id ? "EDIT RECORD" : "NEW RECORD"}
-      </span>
-      <h2>
-        {t(item.id ? "Edit content" : "Create content", "பதிவு திருத்தம்")}
-      </h2>
+    <Modal
+      close={() => !busy && close()}
+      label="Content editor"
+      className="content-studio"
+    >
+      <div className="studio-header">
+        <span className="studio-module-icon">
+          <FileText size={22} />
+        </span>
+        <div>
+          <span className="eyebrow gold">
+            {names[item.module]?.[0]} · {item.id ? "EDIT RECORD" : "NEW RECORD"}
+          </span>
+          <h2>
+            {t(item.id ? "Edit content" : "Create content", "பதிவு திருத்தம்")}
+          </h2>
+          <p>
+            {t(
+              "Prepare your message. We’ll take care of the presentation.",
+              "உங்கள் செய்தியை உருவாக்குங்கள்.",
+            )}
+          </p>
+        </div>
+        <span className={"status-badge " + p.status}>{p.status}</span>
+      </div>
       <form
+        className="studio-form"
         onSubmit={async (e) => {
           e.preventDefault();
+          if (!p.title_en.trim()) { Language("en"); E(t("Please enter an English title.", "ஆங்கிலத் தலைப்பை உள்ளிடுங்கள்.")); return; }
           B(true);
           E("");
           try {
@@ -2417,169 +2438,271 @@ function ContentEditor({ item, close, saved }) {
           }
         }}
       >
-        <div className="editor-grid">
-          {["en", "ta"].map((l) => (
-            <div key={l}>
-              <h3>{l === "en" ? "English" : "தமிழ்"}</h3>
-              <label>
-                {t("Title", "தலைப்பு")}
-                <input
-                  aria-label={l === "en" ? "English title" : "Tamil title"}
-                  value={p["title_" + l]}
-                  required={l === "en"}
-                  maxLength={255}
-                  onChange={(e) => update("title_" + l, e.target.value)}
-                />
-              </label>
-              <label>
-                {t("Content", "உள்ளடக்கம்")}
-                <textarea
-                  aria-label={l === "en" ? "English content" : "Tamil content"}
-                  rows={8}
-                  maxLength={20000}
-                  value={p["body_" + l]}
-                  onChange={(e) => update("body_" + l, e.target.value)}
-                />
-              </label>
-            </div>
-          ))}
-        </div>
-        <div className="editor-grid">
-          <label>
-            {t("Category", "வகை")}
-            <input
-              value={p.category}
-              onChange={(e) => update("category", e.target.value)}
-            />
-          </label>
-          <label>
-            {t("Status", "நிலை")}
-            <select
-              aria-label={t("Publication status", "வெளியீட்டு நிலை")}
-              value={p.status}
-              onChange={(e) => update("status", e.target.value)}
-            >
-              {["draft", "published", "archived"].map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            {t("Schedule publication", "வெளியீட்டு தேதி")}
-            <input
-              aria-label={t("Schedule publication", "வெளியீட்டு தேதி")}
-              type="date"
-              value={p.publish_at}
-              onChange={(e) => update("publish_at", e.target.value)}
-            />
-          </label>
-          <label>
-            {t("Display order", "வரிசை")}
-            <input
-              type="number"
-              value={p.sort_order}
-              onChange={(e) => update("sort_order", Number(e.target.value))}
-            />
-          </label>
-          {fieldSets[p.module].map((k) => (
-            <label
-              key={k}
-              className={booleans.includes(k) ? "check-label" : ""}
-            >
-              {booleans.includes(k) ? (
-                <>
-                  <input
-                    type="checkbox"
-                    checked={p.data[k] === true}
-                    onChange={(e) => data(k, e.target.checked)}
-                  />
-                  {k === "rights_confirmed"
-                    ? t(
-                        "Church is authorized to publish both translations",
-                        "இரு மொழிபெயர்ப்புகளையும் வெளியிட சபைக்கு அனுமதி உள்ளது",
-                      )
-                    : t(...fieldLabels[k])}
-                </>
-              ) : (
-                <>
-                  {t(...fieldLabels[k])}
-                  <input
-                    aria-label={t(...fieldLabels[k])}
-                    type={
-                      k === "date" ? "date" : k === "month" ? "month" : "text"
-                    }
-                    value={p.data[k] || ""}
-                    onChange={(e) => data(k, e.target.value)}
-                  />
-                </>
-              )}
-            </label>
-          ))}
-          {p.module === "photos" && (
-            <label>
-              {t("Album", "ஆல்பம்")}
-              <select
-                value={p.parent_id || ""}
-                onChange={(e) =>
-                  update(
-                    "parent_id",
-                    e.target.value ? Number(e.target.value) : null,
-                  )
-                }
+        <div className="studio-scroll">
+          <div className="studio-layout">
+            <section className="studio-writing">
+              <div className="studio-section-title">
+                <div>
+                  <h3>
+                    {t("Content & translation", "உள்ளடக்கமும் மொழிபெயர்ப்பும்")}
+                  </h3>
+                  <p>
+                    {t(
+                      "Write in English and add a Tamil translation.",
+                      "ஆங்கிலத்திலும் தமிழிலும் எழுதுங்கள்.",
+                    )}
+                  </p>
+                </div>
+                <span>01</span>
+              </div>
+              <div
+                className="studio-language-tabs"
+                role="tablist"
+                aria-label="Content language"
               >
-                <option value="">—</option>
-                {albums.data?.items.map((a) => (
-                  <option value={a.id} key={a.id}>
-                    {a.title_en}
-                  </option>
+                {["en", "ta"].map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    role="tab"
+                    aria-selected={language === l}
+                    aria-controls={"studio-panel-" + l}
+                    id={"studio-tab-" + l}
+                    onClick={() => Language(l)}
+                  >
+                    {l === "en" ? "English" : "தமிழ்"}
+                    <span>{l === "en" ? "Primary" : "Translation"}</span>
+                  </button>
                 ))}
-              </select>
+              </div>
+              <div className="studio-language-panels">
+                {["en", "ta"].map((l) => (
+                  <div
+                    key={l}
+                    role="tabpanel"
+                    id={"studio-panel-" + l}
+                    aria-labelledby={"studio-tab-" + l}
+                    hidden={language !== l}
+                  >
+                    <label>
+                      {t("Title", "தலைப்பு")}
+                      <input
+                        aria-label={
+                          l === "en" ? "English title" : "Tamil title"
+                        }
+                        placeholder={
+                          l === "en"
+                            ? "Give this record a clear title"
+                            : "தமிழ் தலைப்பை உள்ளிடுங்கள்"
+                        }
+                        value={p["title_" + l]}
+                        required={l === "en" && language === "en"}
+                        onInvalid={() => Language(l)}
+                        maxLength={255}
+                        onChange={(e) => update("title_" + l, e.target.value)}
+                      />
+                    </label>
+                    <label>
+                      {t("Content", "உள்ளடக்கம்")}
+                      <textarea
+                        aria-label={
+                          l === "en" ? "English content" : "Tamil content"
+                        }
+                        rows={7}
+                        placeholder={
+                          l === "en"
+                            ? "Share the details your church family needs…"
+                            : "உள்ளடக்கத்தை இங்கே எழுதுங்கள்…"
+                        }
+                        maxLength={20000}
+                        value={p["body_" + l]}
+                        onChange={(e) => update("body_" + l, e.target.value)}
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <p className="studio-writing-hint">
+                <BookOpen size={14} />{" "}
+                {t(
+                  "Paragraphs, ## headings and - lists are supported.",
+                  "பத்திகள், தலைப்புகள் மற்றும் பட்டியல்கள் ஆதரிக்கப்படுகின்றன.",
+                )}
+              </p>
+            </section>
+            <section className="studio-details">
+              <div className="studio-section-title">
+                <div>
+                  <h3>{t("Publishing details", "வெளியீட்டு விவரங்கள்")}</h3>
+                  <p>
+                    {t(
+                      "Organize this record and choose when it appears.",
+                      "பதிவையும் வெளியீட்டையும் நிர்வகியுங்கள்.",
+                    )}
+                  </p>
+                </div>
+                <span>02</span>
+              </div>
+              <div className="editor-grid">
+                <label>
+                  {t("Category", "வகை")}
+                  <input
+                    value={p.category}
+                    onChange={(e) => update("category", e.target.value)}
+                  />
+                </label>
+                <label>
+                  {t("Status", "நிலை")}
+                  <select
+                    aria-label={t("Publication status", "வெளியீட்டு நிலை")}
+                    value={p.status}
+                    onChange={(e) => update("status", e.target.value)}
+                  >
+                    {["draft", "published", "archived"].map((x) => (
+                      <option key={x}>{x}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  {t("Schedule publication", "வெளியீட்டு தேதி")}
+                  <input
+                    aria-label={t("Schedule publication", "வெளியீட்டு தேதி")}
+                    type="date"
+                    value={p.publish_at}
+                    onChange={(e) => update("publish_at", e.target.value)}
+                  />
+                </label>
+                <label>
+                  {t("Display order", "வரிசை")}
+                  <input
+                    type="number"
+                    value={p.sort_order}
+                    onChange={(e) =>
+                      update("sort_order", Number(e.target.value))
+                    }
+                  />
+                </label>
+                {fieldSets[p.module].map((k) => (
+                  <label
+                    key={k}
+                    className={booleans.includes(k) ? "check-label" : ""}
+                  >
+                    {booleans.includes(k) ? (
+                      <>
+                        <input
+                          type="checkbox"
+                          checked={p.data[k] === true}
+                          onChange={(e) => data(k, e.target.checked)}
+                        />
+                        {k === "rights_confirmed"
+                          ? t(
+                              "Church is authorized to publish both translations",
+                              "இரு மொழிபெயர்ப்புகளையும் வெளியிட சபைக்கு அனுமதி உள்ளது",
+                            )
+                          : t(...fieldLabels[k])}
+                      </>
+                    ) : (
+                      <>
+                        {t(...fieldLabels[k])}
+                        <input
+                          aria-label={t(...fieldLabels[k])}
+                          type={
+                            k === "date"
+                              ? "date"
+                              : k === "month"
+                                ? "month"
+                                : "text"
+                          }
+                          value={p.data[k] || ""}
+                          onChange={(e) => data(k, e.target.value)}
+                        />
+                      </>
+                    )}
+                  </label>
+                ))}
+                {p.module === "photos" && (
+                  <label>
+                    {t("Album", "ஆல்பம்")}
+                    <select
+                      value={p.parent_id || ""}
+                      onChange={(e) =>
+                        update(
+                          "parent_id",
+                          e.target.value ? Number(e.target.value) : null,
+                        )
+                      }
+                    >
+                      <option value="">—</option>
+                      {albums.data?.items.map((a) => (
+                        <option value={a.id} key={a.id}>
+                          {a.title_en}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
+            </section>
+          </div>
+          {fieldSets[p.module].includes("image") && (
+            <label className="upload studio-upload">
+              <Upload size={17} />
+              {t(
+                "Upload image (JPEG, PNG, WebP; 8 MB maximum)",
+                "படம் பதிவேற்று (JPEG, PNG, WebP; அதிகபட்சம் 8 MB)",
+              )}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  B(true);
+                  try {
+                    const f = new FormData();
+                    f.append("file", file);
+                    const x = await api("/admin/uploads", "POST", f);
+                    data("image", x.url);
+                  } catch (x) {
+                    E(x.message);
+                  } finally {
+                    B(false);
+                  }
+                }}
+              />
             </label>
           )}
-        </div>
-        {fieldSets[p.module].includes("image") && (
-          <label className="upload">
-            <Upload size={17} />
-            {t(
-              "Upload image (JPEG, PNG, WebP; 8 MB maximum)",
-              "படம் பதிவேற்று (JPEG, PNG, WebP; அதிகபட்சம் 8 MB)",
-            )}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                B(true);
-                try {
-                  const f = new FormData();
-                  f.append("file", file);
-                  const x = await api("/admin/uploads", "POST", f);
-                  data("image", x.url);
-                } catch (x) {
-                  E(x.message);
-                } finally {
-                  B(false);
-                }
-              }}
+          {p.data.image && (
+            <img
+              className="studio-image-preview"
+              src={p.data.image}
+              alt="Selected content image"
             />
-          </label>
-        )}
-        <Notice error={error} />
-        <div className="editor-actions">
-          <button
-            type="button"
-            className="button outline"
-            disabled={busy}
-            onClick={close}
-          >
-            Cancel
-          </button>
-          <button className="button" disabled={busy}>
-            {busy
-              ? t("Saving…", "சேமிக்கிறது…")
-              : t("Save content", "பதிவை சேமி")}
-          </button>
+          )}
+          <Notice error={error} />
+        </div>
+        <div className="editor-actions studio-footer">
+          <span>
+            <Shield size={15} />
+            {p.status === "draft"
+              ? "Saved as a draft until you publish"
+              : "Your publication settings will be applied"}
+          </span>
+          <div>
+            <button
+              type="button"
+              className="button outline"
+              disabled={busy}
+              onClick={close}
+            >
+              Cancel
+            </button>
+            <button className="button" disabled={busy}>
+              {busy
+                ? t("Saving…", "சேமிக்கிறது…")
+                : t("Save content", "பதிவை சேமி")}
+            </button>
+          </div>
         </div>
       </form>
     </Modal>
