@@ -15,3 +15,7 @@ backups/
 
 .vercel/
 public/
+.env*
+!.env.example
+
+web_dist/

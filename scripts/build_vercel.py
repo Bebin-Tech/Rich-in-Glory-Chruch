@@ -6,6 +6,9 @@ source = root / 'frontend' / 'dist'
 if not (source / 'index.html').is_file():
     raise RuntimeError('Build the frontend before preparing Vercel assets.')
 copytree(source, root / 'public', dirs_exist_ok=True)
+# Keep the SPA fallback and dynamically generated assets in the function bundle.
+# Vercel discovers CDN public files before this custom build runs.
+copytree(source, root / 'web_dist', dirs_exist_ok=True)
 print('Frontend assets prepared for the Vercel CDN.')
 
 import subprocess, sys

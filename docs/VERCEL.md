@@ -1,8 +1,12 @@
 # Vercel deployment
 
-Deployment preparation is included; a live deployment has not yet been made.
+Production: https://rich-in-glory-church.vercel.app
 
-Use the repository root, Flask framework, Python 3.12, and the committed vercel.json. The build creates the React production bundle and copies it into public/ for CDN delivery. app.py exports the Flask WSGI instance. Public routes return the SPA index, while existing /api routes continue using Flask on the same origin.
+Admin: https://rich-in-glory-church.vercel.app/admin
+
+Deployed on 12 October 2026 with free Aiven MySQL and Valkey in Bengaluru and public Vercel Blob storage in Mumbai. Production service credentials are stored in Vercel; one-time administrator initialization variables were removed after verification.
+
+Use the repository root, Flask framework, Python 3.12, and the committed vercel.json. The build creates the React production bundle and copies it into public/ for CDN delivery and web_dist/ for function-based SPA and generated-asset fallback. Vercel discovers public assets before the custom build, so web_dist/ keeps newly generated files and direct page links available on fresh checkouts. app.py exports the Flask WSGI instance. Public routes return the SPA index, while existing /api routes continue using Flask on the same origin.
 
 ## Required services and environment
 
@@ -24,3 +28,9 @@ Only validated, resized, re-encoded public church images go to the Blob store. P
 Before launch, verify sign-in, all admin modules, publication, images, prayer privacy, reading progress, and external contact links against the real deployed URL. Provision no paid plan without the church’s approved budget. Provider account creation, verification, and terms acceptance may require user participation.
 
 For the first deployment only, set INITIALIZE_CHURCH_DATABASE=1, INITIAL_ADMIN_EMAIL, and INITIAL_ADMIN_PASSWORD_HASH (Werkzeug scrypt hash) securely in Vercel. The build-time initializer acquires a MySQL lock, applies Alembic migrations, creates the administrator only if absent, and imports the verified public listing. It does not overwrite an existing account or migrate private requests. Remove these three bootstrap variables after verification.
+
+## Deployment verification
+
+Hosted administrator authentication, all 14 content modules, five private management modules, and dashboard counts passed. Unauthenticated admin access returned 401. Homepage, /admin, /about, CSS, JavaScript, and original church images returned 200. A real public church image uploaded with status 201 and the stored WebP returned 200. Browser sign-in reached the administrator dashboard with no captured console errors. All 20 backend tests passed.
+
+Deploy with the official Vercel CLI from the repository root (`vercel deploy --prod`). GitHub push automation is not connected: Vercel could not access the repository through its GitHub integration. CLI deployments remain available; no service secrets are committed.

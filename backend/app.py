@@ -174,7 +174,7 @@ def validate_content(p,module):
     return result
 
 def create_app(test_config=None):
-    static_root=Path(__file__).resolve().parents[1]/('public' if os.getenv('VERCEL') else 'frontend/dist')
+    static_root=Path(__file__).resolve().parents[1]/('web_dist' if os.getenv('VERCEL') else 'frontend/dist')
     app=Flask(__name__,static_folder=str(static_root),static_url_path='/assets-static')
     production=os.getenv('APP_ENV')=='production'
     app.config.update(SECRET_KEY=os.getenv('SECRET_KEY') or (None if production else secrets.token_hex(32)),SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL','sqlite:///development.db'),SQLALCHEMY_TRACK_MODIFICATIONS=False,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE='Lax',SESSION_COOKIE_SECURE=production,PERMANENT_SESSION_LIFETIME=timedelta(hours=8),MAX_CONTENT_LENGTH=8*1024*1024,RATELIMIT_STORAGE_URI=os.getenv('RATELIMIT_STORAGE_URI','memory://'),UPLOAD_FOLDER=str(Path(os.getenv('UPLOAD_FOLDER',str(Path(__file__).parent/'uploads'))).resolve()))
