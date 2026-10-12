@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.local-runtime.json
+.local-mysql
+.venv
+.pytest*
+**/__pycache__
+frontend/node_modules
+frontend/dist
+public
+instance
+backend/uploads
+backups
+.git

@@ -1,5 +1,5 @@
 """Rich in Glory REST service. Private records never use public content routes."""
-import os, re, secrets, uuid
+import os, re, secrets, uuid, io, ssl
 from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
@@ -174,14 +174,24 @@ def validate_content(p,module):
     return result
 
 def create_app(test_config=None):
-    app=Flask(__name__,static_folder='../frontend/dist',static_url_path='/assets-static')
+    static_root=Path(__file__).resolve().parents[1]/('public' if os.getenv('VERCEL') else 'frontend/dist')
+    app=Flask(__name__,static_folder=str(static_root),static_url_path='/assets-static')
     production=os.getenv('APP_ENV')=='production'
     app.config.update(SECRET_KEY=os.getenv('SECRET_KEY') or (None if production else secrets.token_hex(32)),SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL','sqlite:///development.db'),SQLALCHEMY_TRACK_MODIFICATIONS=False,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE='Lax',SESSION_COOKIE_SECURE=production,PERMANENT_SESSION_LIFETIME=timedelta(hours=8),MAX_CONTENT_LENGTH=8*1024*1024,RATELIMIT_STORAGE_URI=os.getenv('RATELIMIT_STORAGE_URI','memory://'),UPLOAD_FOLDER=str(Path(os.getenv('UPLOAD_FOLDER',str(Path(__file__).parent/'uploads'))).resolve()))
+    app.config['MEDIA_STORAGE']=os.getenv('MEDIA_STORAGE','local')
+    if os.getenv('VERCEL'):
+        app.config['MAX_CONTENT_LENGTH']=4*1024*1024
+        app.config['SQLALCHEMY_ENGINE_OPTIONS']={'pool_pre_ping':True,'pool_recycle':300,'pool_size':2,'max_overflow':0}
+    if production and not test_config:
+        tls=ssl.create_default_context(cadata=os.getenv('MYSQL_SSL_CA') or None)
+        options=app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS',{})
+        options['connect_args']={'ssl':tls,'connect_timeout':10}
     if test_config: app.config.update(test_config)
     if not app.config['SECRET_KEY']: raise RuntimeError('Set SECRET_KEY before production startup.')
     if production and not app.config.get('TESTING'):
         if len(app.config['SECRET_KEY'])<32 or 'replace-with' in app.config['SECRET_KEY']: raise RuntimeError('Use a strong random SECRET_KEY.')
         if not app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'): raise RuntimeError('Production requires MySQL.')
+        if os.getenv('VERCEL') and (app.config['MEDIA_STORAGE']!='vercel_blob' or not os.getenv('BLOB_READ_WRITE_TOKEN')): raise RuntimeError('Vercel requires configured persistent Blob storage.')
         if app.config['RATELIMIT_STORAGE_URI']=='memory://': raise RuntimeError('Production requires shared rate-limit storage, e.g. Redis.')
     db.init_app(app); migrate.init_app(app,db); limiter.init_app(app)
 
@@ -442,9 +452,21 @@ def create_app(test_config=None):
             if im.format not in ['JPEG','PNG','WEBP'] or im.width*im.height>20000000: fail('Use a JPEG, PNG or WebP up to 20 megapixels.')
             im.load(); im.thumbnail((2000,2000)); im=im.convert('RGB')
         except (UnidentifiedImageError,OSError,Image.DecompressionBombError): fail('Invalid image.')
-        folder=Path(app.config['UPLOAD_FOLDER']); folder.mkdir(parents=True,exist_ok=True)
-        name=uuid.uuid4().hex+'.webp'; im.save(folder/name,'WEBP',quality=85)
-        log('image.upload',name); db.session.commit(); return jsonify(url='/uploads/'+name),201
+        name=uuid.uuid4().hex+'.webp'
+        if app.config['MEDIA_STORAGE']=='vercel_blob':
+            from vercel.blob import BlobClient
+            buffer=io.BytesIO(); im.save(buffer,'WEBP',quality=85)
+            try:
+                with BlobClient() as client:
+                    blob=client.put('church/'+name,buffer.getvalue(),access='public',content_type='image/webp')
+            except Exception:
+                fail('Photo storage is unavailable. Please try again.',503)
+            url=blob.url
+        else:
+            folder=Path(app.config['UPLOAD_FOLDER']); folder.mkdir(parents=True,exist_ok=True)
+            im.save(folder/name,'WEBP',quality=85)
+            url='/uploads/'+name
+        log('image.upload',name); db.session.commit(); return jsonify(url=url),201
 
     @app.get('/uploads/<name>')
     def uploaded(name):

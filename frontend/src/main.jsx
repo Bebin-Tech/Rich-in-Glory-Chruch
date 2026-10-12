@@ -73,6 +73,32 @@ const names = {
 };
 const Ctx = createContext();
 let csrf = "";
+async function prepareImageUpload(file) {
+  if (file.size > 8 * 1024 * 1024) throw Error("Choose an image up to 8 MB.");
+  if (file.size <= 3.5 * 1024 * 1024) return file;
+  const bitmap = await createImageBitmap(file);
+  try {
+    if (bitmap.width * bitmap.height > 20000000)
+      throw Error("Choose an image up to 20 megapixels.");
+    const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas
+      .getContext("2d")
+      .drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/webp", 0.85),
+    );
+    if (!blob || blob.size > 3.5 * 1024 * 1024)
+      throw Error(
+        "This image is too large after optimization. Please resize it and try again.",
+      );
+    return new File([blob], "optimized.webp", { type: "image/webp" });
+  } finally {
+    bitmap.close();
+  }
+}
 async function api(path, method = "GET", body, signal) {
   const res = await fetch("/api" + path, {
     method,
@@ -2419,7 +2445,16 @@ function ContentEditor({ item, close, saved }) {
         className="studio-form"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (!p.title_en.trim()) { Language("en"); E(t("Please enter an English title.", "ஆங்கிலத் தலைப்பை உள்ளிடுங்கள்.")); return; }
+          if (!p.title_en.trim()) {
+            Language("en");
+            E(
+              t(
+                "Please enter an English title.",
+                "ஆங்கிலத் தலைப்பை உள்ளிடுங்கள்.",
+              ),
+            );
+            return;
+          }
           B(true);
           E("");
           try {
@@ -2660,7 +2695,7 @@ function ContentEditor({ item, close, saved }) {
                   B(true);
                   try {
                     const f = new FormData();
-                    f.append("file", file);
+                    f.append("file", await prepareImageUpload(file));
                     const x = await api("/admin/uploads", "POST", f);
                     data("image", x.url);
                   } catch (x) {

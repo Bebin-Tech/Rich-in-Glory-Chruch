@@ -165,3 +165,36 @@ def test_private_search_and_pagination(client,app):
     second=client.get('/api/admin/private/prayer?page=2').json
     assert first['total']==25 and len(first['items'])==20 and len(second['items'])==5
     assert not set(r['id'] for r in first['items']) & set(r['id'] for r in second['items'])
+
+def test_vercel_blob_upload_preserves_image_validation(client,app,monkeypatch):
+    from types import SimpleNamespace
+    BlobClient=pytest.importorskip("vercel.blob").BlobClient
+    uploaded=[]
+    def put(self,name,body,**kwargs):
+        image=Image.open(io.BytesIO(body))
+        assert image.format=='WEBP'
+        assert kwargs=={'access':'public','content_type':'image/webp'}
+        uploaded.append(name)
+        return SimpleNamespace(url='https://church.public.blob.vercel-storage.com/'+name)
+    monkeypatch.setenv('BLOB_READ_WRITE_TOKEN','test-token-only')
+    monkeypatch.setattr(BlobClient,'put',put)
+    app.config['MEDIA_STORAGE']='vercel_blob'
+    login(client);token=client.get('/api/session').json['csrf']
+    bad=client.post('/api/admin/uploads',data={'file':(io.BytesIO(b'bad'),'bad.png')},headers={'X-CSRF-Token':token})
+    assert bad.status_code==400 and not uploaded
+    image=io.BytesIO();Image.new('RGB',(10,10)).save(image,'PNG');image.seek(0)
+    result=client.post('/api/admin/uploads',data={'file':(image,'photo.png')},headers={'X-CSRF-Token':token})
+    assert result.status_code==201 and result.json['url'].startswith('https://church.public.blob.vercel-storage.com/church/')
+    assert len(uploaded)==1
+
+
+def test_vercel_blob_failure_returns_safe_message(client,app,monkeypatch):
+    BlobClient=pytest.importorskip("vercel.blob").BlobClient
+    def broken(*args,**kwargs): raise RuntimeError('private-token-must-not-leak')
+    monkeypatch.setenv('BLOB_READ_WRITE_TOKEN','test-token-only')
+    monkeypatch.setattr(BlobClient,'put',broken)
+    app.config['MEDIA_STORAGE']='vercel_blob'
+    login(client);token=client.get('/api/session').json['csrf']
+    image=io.BytesIO();Image.new('RGB',(10,10)).save(image,'PNG');image.seek(0)
+    result=client.post('/api/admin/uploads',data={'file':(image,'photo.png')},headers={'X-CSRF-Token':token})
+    assert result.status_code==503 and 'private-token' not in result.text

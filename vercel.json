@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "flask",
+  "buildCommand": "npm ci --prefix frontend && npm run build --prefix frontend && python scripts/build_vercel.py",
+  "functions": {
+    "app.py": {
+      "excludeFiles": "{.venv/**,.local-mysql/**,.pytest*/**,backend/tests/**,docs/**,frontend/node_modules/**,frontend/dist/**,public/assets/**,public/church/**,backups/**,instance/**}"
+    }
+  }
+}

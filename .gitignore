@@ -12,3 +12,6 @@ backups/
 .local-mysql/
 .local-runtime.json
 .pytest-tmp*/
+
+.vercel/
+public/

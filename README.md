@@ -88,7 +88,7 @@ Tests use an isolated in-memory SQLite database by default. MySQL tests use `ric
 
 ## Production deployment
 
-This stack requires a Python/MySQL host; Cloudflare Sites cannot execute Flask or a MySQL server. No deployment account or domain was supplied. Deploy with these steps:
+This stack requires a Python/MySQL host; Cloudflare Sites cannot execute Flask or a MySQL server. For the prepared Vercel path, see [docs/VERCEL.md](docs/VERCEL.md). A live deployment still requires hosted MySQL, Redis/Valkey and Blob storage. For a traditional Python host, deploy with these steps:
 
 1. Provision a private MySQL database with utf8mb4, encrypted disks, encrypted backups and TLS; configure SQLAlchemy connection TLS arguments for your provider. Grant the migration account DDL access and the serving account only necessary table DML access after applying migrations.
 2. Build React with `npm ci && npm run build`. Flask serves the build and uploads on the same origin.
